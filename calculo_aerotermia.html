@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Aerotermia y ACS | Pocket HVAC</title>
+    <!-- PWA Configuración -->
+    <link rel="manifest" href="/POCKET-HVAC/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/POCKET-HVAC/icons/icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/POCKET-HVAC/sw.js'); });
+        }
+    </script>
+    <style>
+        :root { --bg-base: #000000; --panel-bg: #1C1C1E; --panel-border: #38383A; --accent: #FF9F0A; --text-main: #FFFFFF; --text-muted: #8E8E93; --danger: #FF453A; --water: #0A84FF; --acs: #FF453A; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 4rem; -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top);}
+        .app-nav { background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; height: 54px; border-bottom: 0.5px solid var(--panel-border); margin-bottom: 1rem; }
+        .back-btn { position: absolute; left: 1rem; color: var(--accent); text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; gap: 4px; }
+        .nav-title { font-weight: 600; font-size: 1.1rem; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .card { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+        .card-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.4rem; }
+        input, select { width: 100%; background: #2C2C2E; border: none; color: white; padding: 0.8rem; border-radius: 10px; font-size: 1rem; font-family: inherit;}
+        input:focus, select:focus { outline: 2px solid var(--accent); }
+        .btn-calc { background: var(--accent); color: white; border: none; padding: 1.2rem; width: 100%; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1.1rem; margin: 1rem 0; }
+        .btn-calc:active { opacity: 0.8; }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+        .res-card { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .res-card h3 { font-size: 1rem; text-transform: uppercase; margin-bottom: 0.5rem; text-align: center; font-weight: 600;}
+        .res-item { display: flex; justify-content: space-between; font-size: 0.95rem; border-bottom: 0.5px solid var(--panel-border); padding-bottom: 0.5rem; align-items: center;}
+        .res-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .res-item span { color: var(--text-muted); }
+        .res-item strong { font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-nav">
+        <a href="index.html" class="back-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Atrás</a>
+        <div class="nav-title">Aerotermia Pro</div>
+    </div>
+    <div class="container">
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title" style="color: var(--accent);">🔥 1. Demanda de Climatización</div>
+                <div class="grid-params" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group"><label>Superficie (m²)</label><input type="number" id="area_viv" value="150"></div>
+                    <div class="form-group">
+                        <label>Aislamiento</label>
+                        <select id="dem">
+                            <option value="35">Alto (35 W/m²)</option>
+                            <option value="55" selected>Medio (55 W/m²)</option>
+                            <option value="85">Bajo (85 W/m²)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Emisor (ΔT)</label>
+                        <select id="dt" onchange="actualizarVolumenRed()">
+                            <option value="5" data-vol="1.5">Suelo Radiante</option>
+                            <option value="7" data-vol="1.0">Fancoils</option>
+                            <option value="10" data-vol="2.5">Radiadores</option>
+                        </select>
+                    </div>
+                    <div class="form-group"><label>P. Mín (kW)</label><input type="number" id="p_minima" placeholder="Auto"></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title" style="color: var(--acs);">💧 2. Demanda ACS e Hidráulica</div>
+                <div class="grid-params" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group"><label>Nº Viviendas</label><input type="number" id="n_viv" value="1"></div>
+                    <div class="form-group"><label>Personas/Viv</label><input type="number" id="n_pax" value="4"></div>
+                    <div class="form-group"><label>L/Persona</label><input type="number" id="l_pax" value="28"></div>
+                    <div class="form-group"><label>Vol. Red (L/m²)</label><input type="number" id="vol_red" value="1.5"></div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-calc" onclick="calcularSalaMaquinas()">DIMENSIONAR SALA</button>
+        <div id="panel_resultados" class="results-section results-grid" style="display:none;">
+            <div class="res-card">
+                <h3 style="color: var(--accent);">⚙️ Generador (Primario)</h3>
+                <div class="res-item"><span>Potencia Máquina</span><strong id="r_pot" style="color: var(--accent);">--</strong></div>
+                <div class="res-item"><span>Caudal Impulsión</span><strong id="r_caudal">--</strong></div>
+                <div class="res-item"><span>Ø Tubería Principal</span><strong id="r_diam_tub">--</strong></div>
+                <div class="res-item"><span>Consumo Eléc (COP4)</span><strong id="r_elec">--</strong></div>
+            </div>
+            <div class="res-card">
+                <h3 style="color: var(--water);">🛢️ Inercia y Clima</h3>
+                <div class="res-item"><span>Depósito Inercia</span><strong id="r_inercia" style="color: var(--water);">--</strong></div>
+                <div class="res-item"><span>Ø Separador (3D)</span><strong id="r_diam_inercia">--</strong></div>
+                <div class="res-item"><span>Volumen Red</span><strong id="r_vol_clima">--</strong></div>
+                <div class="res-item"><span>Vaso Expansión Clima</span><strong id="r_vaso_clima" style="color: white;">--</strong></div>
+            </div>
+            <div class="res-card">
+                <h3 style="color: var(--acs);">🚿 Acumulación ACS</h3>
+                <div class="res-item"><span>Demanda Diaria</span><strong id="r_demanda_acs">--</strong></div>
+                <div class="res-item"><span>Vol. Interacumulador</span><strong id="r_vol_acs" style="color: var(--acs);">--</strong></div>
+                <div class="res-item"><span>Vol. Expansión ACS</span><strong id="r_exp_acs">--</strong></div>
+                <div class="res-item"><span>Vaso Expansión ACS</span><strong id="r_vaso_acs" style="color: white;">--</strong></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function actualizarVolumenRed() {
+            const selectEmisor = document.getElementById('dt');
+            const vol = selectEmisor.options[selectEmisor.selectedIndex].getAttribute('data-vol');
+            if (vol) document.getElementById('vol_red').value = vol;
+        }
+        function calcularSalaMaquinas() {
+            let area_viv = parseFloat(document.getElementById('area_viv').value) || 0;
+            let n_viv = parseFloat(document.getElementById('n_viv').value) || 1;
+            let demanda_wm2 = parseFloat(document.getElementById('dem').value) || 0;
+            let dt = parseFloat(document.getElementById('dt').value) || 5;
+            let p_min_input = parseFloat(document.getElementById('p_minima').value);
+            let n_pax = parseFloat(document.getElementById('n_pax').value) || 0;
+            let l_pax = parseFloat(document.getElementById('l_pax').value) || 28;
+            let ratio_vol_red = parseFloat(document.getElementById('vol_red').value) || 1.5;
+
+            let area_total = area_viv * n_viv;
+            let p_termica = (area_total * demanda_wm2) / 1000;
+            let q_caudal_lh = (p_termica / (1.16 * dt)) * 1000;
+            let q_caudal_m3s = q_caudal_lh / 3600000;
+            let d_tuberia_mm = Math.sqrt((4 * q_caudal_m3s) / (Math.PI * 1.5)) * 1000;
+            let d_tub_normalizado = Math.ceil(d_tuberia_mm);
+
+            let p_minima = isNaN(p_min_input) ? p_termica : p_min_input;
+            let vol_inercia = Math.ceil(p_minima * 15);
+            let d_inercia_mm = Math.ceil(d_tub_normalizado * 3);
+            let vol_tuberias = area_total * ratio_vol_red; 
+            let vol_total_clima = vol_inercia + vol_tuberias;
+            let expansion_clima = vol_total_clima * 0.025;
+            let vaso_clima = Math.ceil(expansion_clima * 3);
+
+            let demanda_acs = n_viv * n_pax * l_pax;
+            let vol_deposito_acs = Math.ceil(demanda_acs * 0.8);
+            let expansion_acs = vol_deposito_acs * 0.025;
+            let vaso_acs = Math.ceil(expansion_acs * 3);
+
+            document.getElementById('r_pot').innerText = p_termica.toFixed(2) + " kW";
+            document.getElementById('r_caudal').innerText = Math.round(q_caudal_lh) + " L/h";
+            document.getElementById('r_diam_tub').innerText = "Ø " + d_tub_normalizado + " mm";
+            document.getElementById('r_elec').innerText = (p_termica / 4.0).toFixed(2) + " kW";
+
+            document.getElementById('r_inercia').innerText = vol_inercia + " L";
+            document.getElementById('r_diam_inercia').innerText = "Ø " + d_inercia_mm + " mm";
+            document.getElementById('r_vol_clima').innerText = Math.round(vol_total_clima) + " L";
+            document.getElementById('r_vaso_clima').innerText = vaso_clima + " L";
+
+            document.getElementById('r_demanda_acs').innerText = demanda_acs + " L/d";
+            document.getElementById('r_vol_acs').innerText = vol_deposito_acs + " L";
+            document.getElementById('r_exp_acs').innerText = expansion_acs.toFixed(1) + " L";
+            document.getElementById('r_vaso_acs').innerText = vaso_acs + " L";
+
+            document.getElementById('panel_resultados').style.display = 'grid';
+        }
+    </script>
+</body>
+</html>

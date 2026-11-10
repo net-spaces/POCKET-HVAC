@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bomba Hidráulica | Pocket HVAC</title>
+    <!-- PWA Configuración -->
+    <link rel="manifest" href="/POCKET-HVAC/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/POCKET-HVAC/icons/icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/POCKET-HVAC/sw.js'); });
+        }
+    </script>
+    <style>
+        :root { --bg-base: #000000; --panel-bg: #1C1C1E; --panel-border: #38383A; --accent: #0A84FF; --text-main: #FFFFFF; --text-muted: #8E8E93; --danger: #FF453A; --cold: #64D2FF; --hot: #FF9F0A; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 4rem; -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top);}
+        .app-nav { background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; height: 54px; border-bottom: 0.5px solid var(--panel-border); margin-bottom: 1rem; }
+        .back-btn { position: absolute; left: 1rem; color: var(--accent); text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; gap: 4px; }
+        .nav-title { font-weight: 600; font-size: 1.1rem; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1rem; }
+        .card { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+        .card-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.4rem; }
+        input, select { width: 100%; background: #2C2C2E; border: none; color: white; padding: 0.8rem; border-radius: 10px; font-size: 1rem; font-family: inherit;}
+        input:focus, select:focus { outline: 2px solid var(--accent); }
+        table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+        th { text-align: left; padding: 0.5rem; color: var(--text-muted); border-bottom: 1px solid var(--panel-border); font-weight: 500;}
+        td { padding: 0.5rem; border-bottom: 1px solid var(--panel-border); }
+        td input, td select { padding: 0.4rem; font-size: 0.9rem; }
+        .btn-add { background: transparent; color: var(--accent); border: none; padding: 0.5rem 0; cursor: pointer; font-weight: 600; margin-top: 0.5rem; font-size: 1rem; display: flex; align-items: center; gap: 5px; }
+        .btn-del { background: #3A3A3C; color: var(--danger); border: none; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .btn-calc { background: var(--accent); color: white; border: none; padding: 1.2rem; width: 100%; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1.1rem; margin: 1rem 0; }
+        .btn-calc:active { opacity: 0.8; }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+        .res-column { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .res-item { display: flex; justify-content: space-between; font-size: 0.95rem; border-bottom: 0.5px solid var(--panel-border); padding-bottom: 0.5rem; align-items: center;}
+        .res-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .res-item span { color: var(--text-muted); }
+        .res-item strong { font-weight: 600; }
+        .res-total { font-size: 1.2rem; font-weight: 600; margin-top: 0.5rem; text-align: center; padding-top: 1rem; border-top: 0.5px solid var(--panel-border); }
+        .t-cold { color: var(--cold); } .t-hot { color: var(--hot); }
+    </style>
+</head>
+<body>
+    <div class="app-nav">
+        <a href="index.html" class="back-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Atrás</a>
+        <div class="nav-title">Hidráulica Pro</div>
+    </div>
+    <div class="container">
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">📏 Tramos de Tubería</div>
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 10px; font-weight: 500;">
+                        <input type="checkbox" id="ida_vuelta" checked style="width: 20px; height: 20px;"> Multiplicar x2 (Ida y Vuelta)
+                    </label>
+                </div>
+                <div style="max-height: 200px; overflow-y: auto;">
+                    <table id="tabla_tramos">
+                        <thead><tr><th>Longitud (m)</th><th>Acción</th></tr></thead>
+                        <tbody id="tbody_tramos">
+                            <tr><td><input type="number" class="val-tramo" value="0.485" step="0.01"></td><td><button class="btn-del" onclick="borrarFila(this)">X</button></td></tr>
+                            <tr><td><input type="number" class="val-tramo" value="1.59" step="0.01"></td><td><button class="btn-del" onclick="borrarFila(this)">X</button></td></tr>
+                            <tr><td><input type="number" class="val-tramo" value="83.26" step="0.01"></td><td><button class="btn-del" onclick="borrarFila(this)">X</button></td></tr>
+                            <tr><td><input type="number" class="val-tramo" value="10" step="0.01"></td><td><button class="btn-del" onclick="borrarFila(this)">X</button></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <button class="btn-add" onclick="anadirTramo()">+ Añadir Tramo</button>
+            </div>
+            <div class="card">
+                <div class="card-title">⚙️ Parámetros y Altura</div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group"><label>Pérdida Tubería (m.c.a/m)</label><input type="number" id="pdc_lin" value="0.02" step="0.001"></div>
+                    <div class="form-group"><label>Factor Accesorios</label><input type="number" id="f_acc" value="1.35" step="0.01"></div>
+                    <div class="form-group"><label>P. Eq. Frío (m.c.a)</label><input type="number" id="p_eq_f" value="2.9" step="0.1"></div>
+                    <div class="form-group"><label>P. Eq. Calor (m.c.a)</label><input type="number" id="p_eq_c" value="6.53" step="0.1"></div>
+                    <div class="form-group"><label>Pérdida Extra (m.c.a)</label><input type="number" id="p_extra" value="0" step="0.1"></div>
+                </div>
+                <div style="background: rgba(10, 132, 255, 0.1); padding: 1rem; border-radius: 10px; margin-top: 10px;">
+                    <div class="form-group"><label style="color:var(--accent); font-weight:600;">Altura Geométrica (m)</label><input type="number" id="h_geom" value="15"></div>
+                    <div class="form-group">
+                        <label>Tipo de Circuito</label>
+                        <select id="circuito_abierto">
+                            <option value="cerrado">Cerrado (Altura no afecta)</option>
+                            <option value="abierto">Abierto (Torre Ref. - Altura afecta)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">🌊 Cálculo de Caudales</div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Equipo</th>
+                            <th>Q. Frío</th>
+                            <th>Q. Calor</th>
+                            <th>Uds</th>
+                            <th>Sim(%)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_caudales">
+                        <tr>
+                            <td><input type="text" value="Fancoil"></td>
+                            <td><input type="number" class="val-qf" value="1.29" step="0.01"></td>
+                            <td><input type="number" class="val-qc" value="0.858" step="0.01"></td>
+                            <td><input type="number" class="val-cant" value="56"></td>
+                            <td><input type="number" class="val-sim" value="80"></td>
+                            <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" value="CL2"></td>
+                            <td><input type="number" class="val-qf" value="2.11" step="0.01"></td>
+                            <td><input type="number" class="val-qc" value="0.989" step="0.01"></td>
+                            <td><input type="number" class="val-cant" value="1"></td>
+                            <td><input type="number" class="val-sim" value="100"></td>
+                            <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="anadirEquipo()">+ Añadir Equipo</button>
+        </div>
+        <button class="btn-calc" onclick="calcularBomba()">EFECTUAR CÁLCULO</button>
+        <div id="panel_resultados" class="results-grid" style="display:none;">
+            <div class="res-column">
+                <h3 style="color: var(--cold); text-align: center; margin-bottom: 1rem; font-size: 1rem;">❄️ RÉGIMEN DE FRÍO</h3>
+                <div class="res-item"><span>Caudal Agua (m³/h)</span><strong class="t-cold" id="r_qf_tot">--</strong></div>
+                <div class="res-item"><span>Fricción Tubería</span><strong id="r_tub_f">--</strong></div>
+                <div class="res-item"><span>Fricción Accesorios</span><strong id="r_acc_f">--</strong></div>
+                <div class="res-item"><span>Pérdida Equipo</span><strong id="r_eq_f">--</strong></div>
+                <div class="res-item"><span>Extras y Altura</span><strong id="r_ext_f">--</strong></div>
+                <div class="res-total t-cold">BOMBA FRÍO: <span id="r_total_f">--</span> m.c.a</div>
+            </div>
+            <div class="res-column">
+                <h3 style="color: var(--hot); text-align: center; margin-bottom: 1rem; font-size: 1rem;">🔥 RÉGIMEN DE CALOR</h3>
+                <div class="res-item"><span>Caudal Agua (m³/h)</span><strong class="t-hot" id="r_qc_tot">--</strong></div>
+                <div class="res-item"><span>Fricción Tubería</span><strong id="r_tub_c">--</strong></div>
+                <div class="res-item"><span>Fricción Accesorios</span><strong id="r_acc_c">--</strong></div>
+                <div class="res-item"><span>Pérdida Equipo</span><strong id="r_eq_c">--</strong></div>
+                <div class="res-item"><span>Extras y Altura</span><strong id="r_ext_c">--</strong></div>
+                <div class="res-total t-hot">BOMBA CALOR: <span id="r_total_c">--</span> m.c.a</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function anadirTramo() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="number" class="val-tramo" value="0" step="0.01"></td><td><button class="btn-del" onclick="borrarFila(this)">X</button></td>`;
+            document.getElementById('tbody_tramos').appendChild(tr);
+        }
+        function anadirEquipo() {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td><input type="text" value="Nuevo"></td>
+                            <td><input type="number" class="val-qf" value="0" step="0.01"></td>
+                            <td><input type="number" class="val-qc" value="0" step="0.01"></td>
+                            <td><input type="number" class="val-cant" value="1"></td>
+                            <td><input type="number" class="val-sim" value="100"></td>
+                            <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>`;
+            document.getElementById('tbody_caudales').appendChild(tr);
+        }
+        function borrarFila(btn) { btn.parentNode.parentNode.remove(); }
+        function calcularBomba() {
+            let sumTramos = 0;
+            document.querySelectorAll('.val-tramo').forEach(inp => sumTramos += (parseFloat(inp.value)||0));
+            let mult = document.getElementById('ida_vuelta').checked ? 2 : 1;
+            let l_real = sumTramos * mult;
+            let q_frio = 0, q_calor = 0;
+            document.querySelectorAll('#tbody_caudales tr').forEach(tr => {
+                let qf = parseFloat(tr.querySelector('.val-qf').value) || 0;
+                let qc = parseFloat(tr.querySelector('.val-qc').value) || 0;
+                let cant = parseFloat(tr.querySelector('.val-cant').value) || 1;
+                let sim = (parseFloat(tr.querySelector('.val-sim').value) || 100) / 100;
+                q_frio += (qf * cant * sim);
+                q_calor += (qc * cant * sim);
+            });
+            let pdc_lin = parseFloat(document.getElementById('pdc_lin').value) || 0;
+            let f_acc = parseFloat(document.getElementById('f_acc').value) || 1.35;
+            let h_geom = parseFloat(document.getElementById('h_geom').value) || 0;
+            let is_open = document.getElementById('circuito_abierto').value === "abierto";
+            let eq_f = parseFloat(document.getElementById('p_eq_f').value) || 0;
+            let eq_c = parseFloat(document.getElementById('p_eq_c').value) || 0;
+            let p_ext = parseFloat(document.getElementById('p_extra').value) || 0;
+
+            let p_tub = l_real * pdc_lin;
+            let p_acc = (l_real * f_acc) * pdc_lin; 
+            let p_altura = is_open ? h_geom : 0; 
+            let extra_total = p_ext + p_altura;
+
+            let total_f = p_tub + p_acc + eq_f + extra_total;
+            let total_c = p_tub + p_acc + eq_c + extra_total;
+
+            document.getElementById('r_qf_tot').innerText = q_frio.toFixed(3);
+            document.getElementById('r_qc_tot').innerText = q_calor.toFixed(3);
+            document.getElementById('r_tub_f').innerText = p_tub.toFixed(2) + " mca";
+            document.getElementById('r_tub_c').innerText = p_tub.toFixed(2) + " mca";
+            document.getElementById('r_acc_f').innerText = p_acc.toFixed(2) + " mca";
+            document.getElementById('r_acc_c').innerText = p_acc.toFixed(2) + " mca";
+            document.getElementById('r_eq_f').innerText = eq_f.toFixed(2) + " mca";
+            document.getElementById('r_eq_c').innerText = eq_c.toFixed(2) + " mca";
+            document.getElementById('r_ext_f').innerText = extra_total.toFixed(2) + " mca";
+            document.getElementById('r_ext_c').innerText = extra_total.toFixed(2) + " mca";
+            document.getElementById('r_total_f').innerText = total_f.toFixed(2);
+            document.getElementById('r_total_c').innerText = total_c.toFixed(2);
+            document.getElementById('panel_resultados').style.display = 'grid';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Conductos Pro | Pocket HVAC</title>
+    <!-- PWA Configuración -->
+    <link rel="manifest" href="/POCKET-HVAC/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/POCKET-HVAC/icons/icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/POCKET-HVAC/sw.js'); });
+        }
+    </script>
+    <style>
+        :root { --bg-base: #000000; --panel-bg: #1C1C1E; --panel-border: #38383A; --accent: #0A84FF; --text-main: #FFFFFF; --text-muted: #8E8E93; --danger: #FF453A; --terminal: #32D74B;}
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 4rem; -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top);}
+        .app-nav { background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; height: 54px; border-bottom: 0.5px solid var(--panel-border); margin-bottom: 1rem; }
+        .back-btn { position: absolute; left: 1rem; color: var(--accent); text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; gap: 4px; }
+        .nav-title { font-weight: 600; font-size: 1.1rem; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
+        .card { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+        .card-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.4rem; }
+        input, select { width: 100%; background: #2C2C2E; border: none; color: white; padding: 0.8rem; border-radius: 10px; font-size: 1rem; font-family: inherit;}
+        input:focus, select:focus { outline: 2px solid var(--accent); }
+        .btn-calc { background: var(--accent); color: white; border: none; padding: 1.2rem; width: 100%; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1.1rem; margin: 1rem 0; }
+        .btn-calc:active { opacity: 0.8; }
+        .results-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem; }
+        .res-box { background: var(--panel-bg); border-radius: 14px; padding: 1rem; display: flex; flex-direction: column; gap: 0.3rem; text-align: center; }
+        .res-box span { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;}
+        .res-box strong { font-weight: 600; font-size: 1.3rem;}
+        .warning { color: var(--danger) !important; }
+        .msg-warning { background: rgba(255,69,58,0.15); color: var(--danger); padding: 1rem; border-radius: 10px; font-weight: 600; text-align: center; margin-bottom: 1rem; font-size: 0.9rem;}
+    </style>
+</head>
+<body>
+    <div class="app-nav">
+        <a href="index.html" class="back-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Atrás</a>
+        <div class="nav-title">Conductos Pro</div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div class="card-title">💨 1. Conducto Principal</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Caudal (m³/h)</label><input type="number" id="q_m3h" value="1500"></div>
+                <div class="form-group"><label>Máx Fricción</label><input type="number" id="dp_max" value="1.5" step="0.1"></div>
+                <div class="form-group"><label>Vel. Límite</label><input type="number" id="v_max" value="6.0" step="0.1"></div>
+                <div class="form-group">
+                    <label>Tipo</label>
+                    <select id="tipo" onchange="toggleAlt()">
+                        <option value="R">Rectangular</option>
+                        <option value="C">Circular</option>
+                    </select>
+                </div>
+                <div class="form-group" id="g_alt" style="grid-column: 1 / -1;"><label>Altura Diseño (mm)</label><input type="number" id="h_mm" value="250" step="50"></div>
+            </div>
+        </div>
+        <div class="card" style="border: 1px solid var(--terminal);">
+            <div class="card-title" style="color: var(--terminal);">🎯 2. Terminales (Local)</div>
+            <div class="form-group">
+                <label>Tipo Impulsión</label>
+                <select id="tipo_imp">
+                    <option value="dif_circ">Dif. Circulares</option>
+                    <option value="dif_cuad">Dif. Cuadrados</option>
+                    <option value="rejilla">Rejillas</option>
+                </select>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Q. Máx Impulsión</label><input type="number" id="q_max_imp" value="400"></div>
+                <div class="form-group"><label>Q. Máx Retorno</label><input type="number" id="q_max_ret" value="800"></div>
+                <div class="form-group"><label>Vel. Impulsión</label><input type="number" id="v_cuello_imp" value="2.5" step="0.1"></div>
+                <div class="form-group"><label>Vel. Retorno</label><input type="number" id="v_cuello_ret" value="2.0" step="0.1"></div>
+            </div>
+        </div>
+        <button class="btn-calc" onclick="calcTotal()">CALCULAR DISTRIBUCIÓN</button>
+        <div id="panel_res" style="display:none; margin-top: 1rem;">
+            <div id="msg_warning" class="msg-warning" style="display:none;">
+                ⚠️ Conducto limitado por velocidad máxima acústica.
+            </div>
+            <h3 style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin: 1.5rem 0 0.5rem; padding-left: 0.5rem;">Red Principal</h3>
+            <div class="results-grid">
+                <div class="res-box"><span>Dimensión Real</span><strong id="r_dim" style="color:var(--accent);">--</strong></div>
+                <div class="res-box"><span>D. Equivalente</span><strong id="r_deq">--</strong></div>
+                <div class="res-box"><span>Velocidad</span><strong id="r_vel">--</strong></div>
+                <div class="res-box"><span>Fricción (Pa/m)</span><strong id="r_dp">--</strong></div>
+            </div>
+            <h3 style="color: var(--terminal); font-size: 0.9rem; text-transform: uppercase; margin: 1.5rem 0 0.5rem; padding-left: 0.5rem;">Unidades Terminales</h3>
+            <div class="results-grid">
+                <div class="res-box" style="border: 1px solid rgba(50,215,75,0.3);">
+                    <span>Uds Impulsión</span><strong id="r_num_imp" style="color:var(--terminal);">--</strong>
+                    <span id="r_txt_imp" style="text-transform:none;">-- m³/h</span>
+                </div>
+                <div class="res-box" style="border: 1px solid rgba(50,215,75,0.3);">
+                    <span>Dim. Impulsión</span><strong id="r_cuello_imp" style="font-size: 1.1rem;">--</strong>
+                    <span style="text-transform:none;">Vel: <span id="r_v_imp_real"></span> m/s</span>
+                </div>
+                <div class="res-box" style="border: 1px solid rgba(255,159,10,0.3);">
+                    <span>Uds Retorno</span><strong id="r_num_ret" style="color: #FF9F0A;">--</strong>
+                    <span id="r_txt_ret" style="text-transform:none;">-- m³/h</span>
+                </div>
+                <div class="res-box" style="border: 1px solid rgba(255,159,10,0.3);">
+                    <span>Dim. Retorno</span><strong id="r_cuello_ret" style="font-size: 1.1rem;">--</strong>
+                    <span style="text-transform:none;">Vel: <span id="r_v_ret_real"></span> m/s</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const diametros = [100, 125, 150, 160, 200, 250, 315, 355, 400, 450, 500, 630, 710, 800, 900, 1000, 1250];
+        function toggleAlt() { document.getElementById('g_alt').style.display = document.getElementById('tipo').value === 'R' ? 'block' : 'none'; }
+        function calcTotal() {
+            let q_m3h = parseFloat(document.getElementById('q_m3h').value);
+            let q_ls = q_m3h / 3.6; let q_m3s = q_m3h / 3600;
+            let dp_lim = parseFloat(document.getElementById('dp_max').value);
+            let v_lim = parseFloat(document.getElementById('v_max').value);
+            let tipo = document.getElementById('tipo').value;
+            let h_mm = parseFloat(document.getElementById('h_mm').value);
+            
+            let deq_t = (32.259 * Math.pow(q_ls, 0.3792)) / Math.pow(dp_lim, 0.2038);
+            let area_min_v = q_m3s / v_lim;
+            let deq_v = Math.sqrt((4 * area_min_v) / Math.PI) * 1000;
+            let deq_diseno = Math.max(deq_t, deq_v);
+            let flag_velocidad = (deq_v > deq_t);
+            let b, area_r, deq_r, txt;
+            
+            if(tipo === 'R') {
+                let b_t = (Math.PI * Math.pow(deq_diseno, 2)) / (4 * h_mm);
+                b = Math.ceil((b_t - 1) / 50) * 50; 
+                deq_r = 1.3 * Math.pow((b * h_mm), 0.625) / Math.pow((b + h_mm), 0.25);
+                area_r = (b * h_mm) / 1000000;
+                txt = b + " x " + h_mm + " mm";
+            } else {
+                let d = diametros.find(x => x >= deq_diseno) || deq_diseno;
+                deq_r = d; area_r = Math.PI * Math.pow(d/1000, 2) / 4;
+                txt = "Ø " + Math.round(d) + " mm";
+            }
+            
+            let v_real = q_m3s / area_r;
+            let re = 70 * deq_r * v_real;
+            let f = 0.11 * Math.pow((0.15 / deq_r) + (68 / re), 0.25);
+            if (f < 0.018) f = (0.85 * f) + 0.0028;
+            let dp_real = 10 * f * Math.pow(v_real, 2) / ((deq_r / 1000) * 16);
+            
+            let tipo_imp = document.getElementById('tipo_imp').value;
+            let max_q_imp = parseFloat(document.getElementById('q_max_imp').value);
+            let max_q_ret = parseFloat(document.getElementById('q_max_ret').value);
+            let v_cuello_imp = parseFloat(document.getElementById('v_cuello_imp').value);
+            let v_cuello_ret = parseFloat(document.getElementById('v_cuello_ret').value);
+
+            let num_imp = Math.ceil(q_m3h / max_q_imp);
+            let q_real_imp = q_m3h / num_imp;
+            let area_cuello_imp = (q_real_imp / 3600) / v_cuello_imp;
+            let txt_cuello_imp = ""; let dim_imp;
+            if(tipo_imp === "dif_circ") {
+                let d_imp_teorico = Math.sqrt((4 * area_cuello_imp) / Math.PI) * 1000;
+                dim_imp = diametros.find(x => x >= d_imp_teorico) || Math.round(d_imp_teorico);
+                txt_cuello_imp = "Ø " + dim_imp + " mm";
+                area_cuello_imp = Math.PI * Math.pow(dim_imp/1000, 2) / 4;
+            } else if (tipo_imp === "dif_cuad") {
+                let l_imp_teorico = Math.sqrt(area_cuello_imp) * 1000;
+                dim_imp = Math.ceil(l_imp_teorico / 50) * 50;
+                txt_cuello_imp = dim_imp + "x" + dim_imp + " mm";
+                area_cuello_imp = (dim_imp * dim_imp) / 1000000;
+            } else {
+                let h_rej_imp = Math.ceil(Math.sqrt((area_cuello_imp*1000000)/2) / 50) * 50;
+                let l_rej_imp = h_rej_imp * 2;
+                txt_cuello_imp = l_rej_imp + "x" + h_rej_imp + " mm";
+                area_cuello_imp = (l_rej_imp * h_rej_imp) / 1000000;
+            }
+            let v_imp_real = (q_real_imp / 3600) / area_cuello_imp;
+
+            let num_ret = Math.ceil(q_m3h / max_q_ret);
+            let q_real_ret = q_m3h / num_ret;
+            let area_cuello_ret = (q_real_ret / 3600) / v_cuello_ret;
+            let h_rej_ret = Math.ceil(Math.sqrt((area_cuello_ret*1000000)/2) / 50) * 50;
+            let l_rej_ret = h_rej_ret * 2;
+            let txt_cuello_ret = l_rej_ret + "x" + h_rej_ret + " mm";
+            let area_real_ret = (l_rej_ret * h_rej_ret) / 1000000;
+            let v_ret_real = (q_real_ret / 3600) / area_real_ret;
+
+            document.getElementById('msg_warning').style.display = flag_velocidad ? 'block' : 'none';
+            document.getElementById('r_dim').innerText = txt;
+            document.getElementById('r_deq').innerText = deq_r.toFixed(1) + " mm";
+            let elVel = document.getElementById('r_vel'); 
+            elVel.innerText = v_real.toFixed(2) + " m/s"; elVel.className = flag_velocidad ? "warning" : "";
+            document.getElementById('r_dp').innerText = dp_real.toFixed(2) + " Pa"; 
+
+            document.getElementById('r_num_imp').innerText = num_imp;
+            document.getElementById('r_txt_imp').innerText = Math.round(q_real_imp) + " m³/h";
+            document.getElementById('r_cuello_imp').innerText = txt_cuello_imp;
+            document.getElementById('r_v_imp_real').innerText = v_imp_real.toFixed(1);
+
+            document.getElementById('r_num_ret').innerText = num_ret;
+            document.getElementById('r_txt_ret').innerText = Math.round(q_real_ret) + " m³/h";
+            document.getElementById('r_cuello_ret').innerText = txt_cuello_ret;
+            document.getElementById('r_v_ret_real').innerText = v_ret_real.toFixed(1);
+
+            document.getElementById('panel_res').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

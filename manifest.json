@@ -1,0 +1,23 @@
+{
+  "name": "Pocket HVAC",
+  "short_name": "Pocket HVAC",
+  "description": "El ecosistema definitivo de cálculo rápido",
+  "start_url": "/POCKET-HVAC/index.html",
+  "id": "/POCKET-HVAC/index.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/POCKET-HVAC/icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/POCKET-HVAC/icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}

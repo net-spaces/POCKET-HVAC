@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Caudales Ventilación | Pocket HVAC</title>
+    <!-- PWA Configuración -->
+    <link rel="manifest" href="/POCKET-HVAC/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/POCKET-HVAC/icons/icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/POCKET-HVAC/sw.js'); });
+        }
+    </script>
+    <style>
+        :root { --bg-base: #000000; --panel-bg: #1C1C1E; --panel-border: #38383A; --accent: #32D74B; --text-main: #FFFFFF; --text-muted: #8E8E93; --danger: #FF453A; --cold: #64D2FF; }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 4rem; -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top);}
+        .app-nav { background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; height: 54px; border-bottom: 0.5px solid var(--panel-border); margin-bottom: 1rem; }
+        .back-btn { position: absolute; left: 1rem; color: var(--accent); text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; gap: 4px; }
+        .nav-title { font-weight: 600; font-size: 1.1rem; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
+        .card { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+        .card-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.4rem; }
+        input, select { width: 100%; background: #2C2C2E; border: none; color: white; padding: 0.8rem; border-radius: 10px; font-size: 1rem; font-family: inherit;}
+        input:focus, select:focus { outline: 2px solid var(--accent); }
+        .btn-calc { background: var(--accent); color: #000; border: none; padding: 1.2rem; width: 100%; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1.1rem; margin: 1rem 0; }
+        .btn-calc:active { opacity: 0.8; }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+        .res-box { background: var(--panel-bg); border-radius: 14px; padding: 1rem; display: flex; flex-direction: column; gap: 0.3rem; text-align: center; }
+        .res-box span { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase;}
+        .res-box strong { font-weight: 600; font-size: 1.3rem;}
+        .btn-add { background: transparent; color: var(--accent); border: none; padding: 0.5rem 0; cursor: pointer; font-weight: 600; margin-top: 0.5rem; font-size: 1rem;}
+        .btn-del { background: #3A3A3C; color: var(--danger); border: none; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 650px;}
+        th { text-align: left; padding: 0.5rem; color: var(--text-muted); border-bottom: 1px solid var(--panel-border); font-weight: 500;}
+        td { padding: 0.5rem; border-bottom: 1px solid var(--panel-border); }
+        .zone-card { background: var(--panel-bg); padding: 1.2rem; border-radius: 14px; display: flex; flex-direction: column; gap: 10px; margin-bottom: 1rem;}
+        .zone-header { font-weight: 600; color: var(--accent); font-size: 1.1rem; border-bottom: 0.5px solid var(--panel-border); padding-bottom: 0.5rem; }
+        .zone-row { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-muted); align-items: center;}
+        .zone-row strong { color: white; }
+        .term-badge { background: #2C2C2E; color: var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="app-nav">
+        <a href="index.html" class="back-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Atrás</a>
+        <div class="nav-title">Ventilación Pro</div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div class="card-title">⚙️ Parámetros Globales</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Vel. Impulsión (m/s)</label><input type="number" id="v_imp" value="2.5" step="0.1"></div>
+                <div class="form-group"><label>Vel. Retorno (m/s)</label><input type="number" id="v_ret" value="2.0" step="0.1"></div>
+                <div class="form-group"><label>Límite m³/h Imp.</label><input type="number" id="max_q_imp" value="400"></div>
+                <div class="form-group"><label>Límite m³/h Ret.</label><input type="number" id="max_q_ret" value="800"></div>
+                <div class="form-group"><label>Ratio Retorno (%)</label><input type="number" id="ratio_ret" value="90"></div>
+                <div class="form-group"><label>Margen UTA (%)</label><input type="number" id="margen_uta" value="5"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">🏢 Zonas de Ventilación</div>
+            <div class="table-container">
+                <table id="tabla_zonas">
+                    <thead>
+                        <tr>
+                            <th>Zona</th>
+                            <th>Tipo Local</th>
+                            <th>Área</th>
+                            <th>Pax</th>
+                            <th>L/s</th>
+                            <th>Impulsión</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_zonas">
+                        <tr>
+                            <td><input type="text" value="Oficina" style="width: 80px;"></td>
+                            <td>
+                                <select onchange="actualizarRatios(this)">
+                                    <option value="10,12.5">Oficinas</option>
+                                    <option value="1.5,8">Restaurante</option>
+                                    <option value="3,8">Comercial</option>
+                                    <option value="custom">Otro</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="v-area" value="150" onchange="recalcOcup(this)" style="width: 70px;"></td>
+                            <td><input type="number" class="v-ocup" value="15" style="width: 60px;"></td>
+                            <td><input type="number" class="v-lsp" value="12.5" style="width: 70px;"></td>
+                            <td>
+                                <select class="v-tipo-imp">
+                                    <option value="circ">Circular</option>
+                                    <option value="cuad">Cuadrado</option>
+                                    <option value="rej">Rejilla</option>
+                                </select>
+                            </td>
+                            <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="anadirFila()">+ Añadir Zona</button>
+        </div>
+        <button class="btn-calc" onclick="calcularVentilacion()">CALCULAR UTA Y RED</button>
+        <div id="panel_resultados" style="display:none; margin-top: 1rem;">
+            <h3 style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin: 1.5rem 0 0.5rem; padding-left: 0.5rem;">Caudales UTA</h3>
+            <div class="results-grid" style="grid-template-columns: 1fr 1fr;">
+                <div class="res-box" style="border: 1px solid rgba(50,215,75,0.3);"><span>Q. Impulsión</span><strong id="res_q_imp" style="color:var(--accent);">--</strong></div>
+                <div class="res-box" style="border: 1px solid rgba(100,210,255,0.3);"><span>Q. Retorno</span><strong id="res_q_ret" style="color:var(--cold);">--</strong></div>
+                <div class="res-box" style="grid-column: 1 / -1;"><span>Conducto General (5m/s)</span><strong id="res_cond_gen">--</strong></div>
+            </div>
+            <h3 style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin: 1.5rem 0 0.5rem; padding-left: 0.5rem;">Selección por Zona</h3>
+            <div id="res_desglose"></div>
+        </div>
+    </div>
+    <script>
+        const diametros = [100,125,150,160,200,250,315,355,400,450,500,630];
+        function actualizarRatios(sel) {
+            const row = sel.closest('tr');
+            if (sel.value !== 'custom') {
+                const vals = sel.value.split(',');
+                const area = parseFloat(row.querySelector('.v-area').value) || 0;
+                row.querySelector('.v-ocup').value = Math.ceil(area / parseFloat(vals[0]));
+                row.querySelector('.v-lsp').value = vals[1];
+            }
+        }
+        function recalcOcup(inp) { const sel = inp.closest('tr').querySelector('select'); actualizarRatios(sel); }
+        function anadirFila() {
+            const tbody = document.getElementById('tbody_zonas');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="Zona" style="width: 80px;"></td>
+                <td><select onchange="actualizarRatios(this)"><option value="10,12.5" selected>Oficinas</option><option value="1.5,8">Restaurante</option><option value="3,8">Comercial</option><option value="custom">Otro</option></select></td>
+                <td><input type="number" class="v-area" value="50" onchange="recalcOcup(this)" style="width: 70px;"></td>
+                <td><input type="number" class="v-ocup" value="5" style="width: 60px;"></td>
+                <td><input type="number" class="v-lsp" value="12.5" style="width: 70px;"></td>
+                <td><select class="v-tipo-imp"><option value="circ">Circular</option><option value="cuad">Cuadrado</option><option value="rej">Rejilla</option></select></td>
+                <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+        function borrarFila(btn) { if(document.getElementById('tbody_zonas').children.length > 1) btn.closest('tr').remove(); }
+        function calcularVentilacion() {
+            let sum_imp_m3h = 0;
+            let ratio_ret = parseFloat(document.getElementById('ratio_ret').value) / 100;
+            let margen = 1 + (parseFloat(document.getElementById('margen_uta').value) / 100);
+            let v_imp = parseFloat(document.getElementById('v_imp').value);
+            let v_ret = parseFloat(document.getElementById('v_ret').value);
+            let max_q_imp = parseFloat(document.getElementById('max_q_imp').value);
+            let max_q_ret = parseFloat(document.getElementById('max_q_ret').value);
+            
+            const desglose = document.getElementById('res_desglose');
+            desglose.innerHTML = ''; 
+
+            document.querySelectorAll('#tbody_zonas tr').forEach(tr => {
+                let nombre = tr.querySelector('input[type="text"]').value;
+                let ocu = parseFloat(tr.querySelector('.v-ocup').value) || 0;
+                let lsp = parseFloat(tr.querySelector('.v-lsp').value) || 0;
+                let tipo_imp = tr.querySelector('.v-tipo-imp').value;
+                
+                let q_imp_zona = Math.round(ocu * lsp * 3.6);
+                let q_ret_zona = Math.round(q_imp_zona * ratio_ret);
+                sum_imp_m3h += q_imp_zona;
+                
+                let n_imp = Math.ceil(q_imp_zona / max_q_imp);
+                let q_imp_u = q_imp_zona / n_imp;
+                let area_imp = (q_imp_u / 3600) / v_imp;
+                
+                let size_imp = "";
+                if(tipo_imp === 'circ') {
+                    let d = Math.sqrt(4 * area_imp / Math.PI) * 1000;
+                    let d_norm = diametros.find(x => x >= d) || Math.round(d);
+                    size_imp = `Ø ${d_norm} mm`;
+                } else if (tipo_imp === 'cuad') {
+                    let l = Math.ceil((Math.sqrt(area_imp) * 1000)/50)*50;
+                    size_imp = `${l} x ${l} mm`;
+                } else {
+                    let h = Math.ceil(Math.sqrt((area_imp*1000000)/2)/50)*50;
+                    size_imp = `${h*2} x ${h} mm`;
+                }
+
+                let n_ret = Math.ceil(q_ret_zona / max_q_ret);
+                let q_ret_u = q_ret_zona / n_ret;
+                let area_ret = (q_ret_u / 3600) / v_ret;
+                let h_ret = Math.ceil(Math.sqrt((area_ret*1000000)/2)/50)*50;
+                let size_ret = `${h_ret*2} x ${h_ret} mm`;
+                
+                desglose.innerHTML += `
+                    <div class="zone-card">
+                        <div class="zone-header">${nombre}</div>
+                        <div class="zone-row"><span>Q. Impulsión:</span><strong>${q_imp_zona} m³/h</strong></div>
+                        <div class="zone-row"><span>Q. Retorno:</span><strong>${q_ret_zona} m³/h</strong></div>
+                        
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--panel-border);">
+                            <div class="zone-row" style="margin-bottom: 5px;"><span class="term-badge">IMPULSIÓN</span></div>
+                            <div class="zone-row"><span>Cantidad:</span><strong>${n_imp} Uds</strong></div>
+                            <div class="zone-row"><span>Tamaño:</span><strong>${size_imp}</strong></div>
+                        </div>
+                        <div style="margin-top: 10px; padding-top: 10px; border-top: 0.5px solid var(--panel-border);">
+                            <div class="zone-row" style="margin-bottom: 5px;"><span class="term-badge" style="color:var(--cold);">RETORNO</span></div>
+                            <div class="zone-row"><span>Cantidad:</span><strong>${n_ret} Uds</strong></div>
+                            <div class="zone-row"><span>Tamaño:</span><strong>${size_ret}</strong></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            let q_imp_diseno = Math.round(sum_imp_m3h * margen);
+            let q_ret_diseno = Math.round(q_imp_diseno * ratio_ret);
+            let l_cond = Math.ceil(Math.sqrt(((q_imp_diseno/3600)/5)/2)*1000 / 50) * 50;
+
+            document.getElementById('res_q_imp').innerText = q_imp_diseno + " m³/h";
+            document.getElementById('res_q_ret').innerText = q_ret_diseno + " m³/h";
+            document.getElementById('res_cond_gen').innerText = (l_cond*2) + " x " + l_cond + " mm";
+            
+            document.getElementById('panel_resultados').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

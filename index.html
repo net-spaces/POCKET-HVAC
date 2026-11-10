@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Pocket HVAC</title>
+    <link rel="manifest" href="/POCKET-HVAC/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/POCKET-HVAC/icons/icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('/POCKET-HVAC/sw.js'));
+        }
+    </script>
+    <style>
+        :root { --bg-base: #000000; --panel-bg: #1C1C1E; --panel-border: #38383A; --accent: #0A84FF; --text-main: #FFFFFF; --text-muted: #8E8E93; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent;}
+        body { background-color: var(--bg-base); color: var(--text-main); padding-top: env(safe-area-inset-top); -webkit-font-smoothing: antialiased;}
+        .app-header { background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; height: 54px; border-bottom: 0.5px solid var(--panel-border); }
+        .header-title { font-weight: 600; font-size: 1.1rem; }
+        .hero { padding: 2rem 1.5rem 1.5rem; text-align: center;}
+        .hero h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 0.5rem; letter-spacing: -0.5px;}
+        .hero p { color: var(--text-muted); font-size: 1rem; line-height: 1.4; max-width: 600px; margin: 0 auto;}
+        .list-container { padding: 0 1rem 4rem; max-width: 800px; margin: 0 auto;}
+        .list-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); font-weight: 600; margin-bottom: 0.8rem; margin-left: 1rem; letter-spacing: 0.5px;}
+        .tool-list { background: var(--panel-bg); border-radius: 14px; overflow: hidden; }
+        .tool-item { display: flex; align-items: center; padding: 1rem; text-decoration: none; border-bottom: 0.5px solid var(--panel-border); color: white; transition: background 0.2s; }
+        .tool-item:active { background: #2C2C2E; }
+        .tool-item:last-child { border-bottom: none; }
+        .tool-icon { width: 42px; height: 42px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-right: 1rem; flex-shrink: 0; box-shadow: 0 2px 5px rgba(0,0,0,0.3);}
+        .tool-text { flex-grow: 1; }
+        .tool-title { font-weight: 600; font-size: 1.05rem; margin-bottom: 0.2rem; }
+        .tool-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.3; }
+        .chevron { color: #5c5c5e; font-size: 1.2rem; padding-left: 0.5rem; font-weight: 300;}
+        .bg-blue { background: #0A84FF; } .bg-indigo { background: #5E5CE6; } .bg-green { background: #32D74B; }
+        .bg-orange { background: #FF9F0A; } .bg-red { background: #FF453A; } .bg-teal { background: #64D2FF; }
+        
+        /* CSS SPLASH SCREEN NATIVO */
+        #splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background-color: #000000;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999; transition: opacity 0.4s ease-out;
+        }
+        #splash-screen img {
+            width: 120px; height: 120px; border-radius: 25px;
+            margin-bottom: 20px; box-shadow: 0 4px 20px rgba(10, 132, 255, 0.2);
+        }
+        #splash-screen h1 {
+            color: #FFFFFF; font-size: 2rem; font-weight: 700; margin: 0; letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- SPLASH SCREEN START -->
+    <div id="splash-screen">
+        <img src="/POCKET-HVAC/icons/icon-192.png" alt="Pocket HVAC Logo">
+        <h1>Pocket HVAC</h1>
+    </div>
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const splash = document.getElementById('splash-screen');
+                if(splash) {
+                    splash.style.opacity = '0';
+                    setTimeout(() => splash.remove(), 400);
+                }
+            }, 800); // Muestra el logo durante 0.8s tras cargar
+        });
+    </script>
+    <!-- SPLASH SCREEN END -->
+
+    <div class="app-header">
+        <div class="header-title">Pocket HVAC</div>
+    </div>
+    <div class="hero">
+        <h1>Pocket HVAC</h1>
+        <p>El ecosistema definitivo de cálculo rápido para proyectos MEP. Dimensión ágil, precisa y bajo normativa directamente en tu bolsillo.</p>
+    </div>
+    <div class="list-container">
+        <div class="list-title">Nuestras calculadoras gratuitas</div>
+        <div class="tool-list">
+            <a href="calculo_conductos_pro.html" class="tool-item">
+                <div class="tool-icon bg-blue">💨</div>
+                <div class="tool-text">
+                    <div class="tool-title">Conductos Pro</div>
+                    <div class="tool-desc">Dimensionado aerodinámico de red y selección de terminales.</div>
+                </div>
+                <div class="chevron">›</div>
+            </a>
+            <a href="calculo_climatizacion.html" class="tool-item">
+                <div class="tool-icon bg-teal">💧</div>
+                <div class="tool-text">
+                    <div class="tool-title">Redes de Climatización</div>
+                    <div class="tool-desc">Cálculo dinámico multizona para sistemas de 2 y 4 tubos.</div>
+                </div>
+                <div class="chevron">›</div>
+            </a>
+            <a href="bomba_hidraulica.html" class="tool-item">
+                <div class="tool-icon bg-indigo">⚙️</div>
+                <div class="tool-text">
+                    <div class="tool-title">Bombas Hidráulicas</div>
+                    <div class="tool-desc">Cálculo de presión de bombeo y caudales hidráulicos.</div>
+                </div>
+                <div class="chevron">›</div>
+            </a>
+            <a href="calculo_ventilacion.html" class="tool-item">
+                <div class="tool-icon bg-green">🍃</div>
+                <div class="tool-text">
+                    <div class="tool-title">Caudales de Ventilación</div>
+                    <div class="tool-desc">Ratios de aire fresco por uso, impulsión y retorno.</div>
+                </div>
+                <div class="chevron">›</div>
+            </a>
+            <a href="calculo_aerotermia.html" class="tool-item">
+                <div class="tool-icon bg-red">⚡</div>
+                <div class="tool-text">
+                    <div class="tool-title">Aerotermia y ACS</div>
+                    <div class="tool-desc">Potencia térmica, caudales y acumulación de ACS.</div>
+                </div>
+                <div class="chevron">›</div>
+            </a>
+            <a href="calculo_cableado.html" class="tool-item">
+                <div class="tool-icon bg-orange">🔌</div>
+                <div class="tool-text">
+                    <div class="tool-title">Cableado y Protecciones</div>
+                    <div class="tool-desc">Cálculo de secciones, magnetotérmico y diferencial.</div>
+                </div>
+                <div class="chevron">›</div>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

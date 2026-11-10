@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Cableado y Protecciones | Pocket HVAC</title>
+    <!-- PWA Configuración -->
+    <link rel="manifest" href="/POCKET-HVAC/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/POCKET-HVAC/icons/icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/POCKET-HVAC/sw.js'); });
+        }
+    </script>
+    <style>
+        :root { --bg-base: #000000; --panel-bg: #1C1C1E; --panel-border: #38383A; --accent: #FF9F0A; --text-main: #FFFFFF; --text-muted: #8E8E93; --danger: #FF453A; --success: #32D74B;}
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 4rem; -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top);}
+        .app-nav { background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; height: 54px; border-bottom: 0.5px solid var(--panel-border); margin-bottom: 1rem; }
+        .back-btn { position: absolute; left: 1rem; color: var(--accent); text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; gap: 4px; }
+        .nav-title { font-weight: 600; font-size: 1.1rem; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
+        .card { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+        .card-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.4rem; }
+        input, select { width: 100%; background: #2C2C2E; border: none; color: white; padding: 0.8rem; border-radius: 10px; font-size: 1rem; font-family: inherit;}
+        input:focus, select:focus { outline: 2px solid var(--accent); }
+        .btn-calc { background: var(--accent); color: white; border: none; padding: 1.2rem; width: 100%; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1.1rem; margin: 1rem 0; }
+        .btn-calc:active { opacity: 0.8; }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+        .res-box { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; }
+        .res-item { display: flex; justify-content: space-between; font-size: 0.95rem; border-bottom: 0.5px solid var(--panel-border); padding-bottom: 0.5rem; align-items: center;}
+        .res-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .res-item span { color: var(--text-muted); }
+        .res-item strong { font-weight: 600; }
+        .term-badge { background: #2C2C2E; color: var(--accent); padding: 4px 8px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; text-align: center; }
+        .btn-add { background: transparent; color: var(--accent); border: none; padding: 0.5rem 0; cursor: pointer; font-weight: 600; margin-top: 0.5rem; font-size: 1rem;}
+        .btn-del { background: #3A3A3C; color: var(--danger); border: none; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px;}
+        th { text-align: left; padding: 0.5rem; color: var(--text-muted); border-bottom: 1px solid var(--panel-border); font-weight: 500;}
+        td { padding: 0.5rem; border-bottom: 1px solid var(--panel-border); }
+    </style>
+</head>
+<body>
+    <div class="app-nav">
+        <a href="index.html" class="back-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Atrás</a>
+        <div class="nav-title">Eléctrica Pro</div>
+    </div>
+    <div class="container">
+        <div class="card">
+            <div class="card-title">⚙️ Parámetros Globales</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Cos Phi</label><input type="number" id="cos_phi" value="0.84" step="0.01"></div>
+                <div class="form-group"><label>Factor I_max</label><input type="number" id="f_imax" value="1.27" step="0.01"></div>
+                <div class="form-group"><label>Margen Mag.</label><input type="number" id="m_mag" value="1.0" step="0.1"></div>
+                <div class="form-group"><label>Precio Obra (€/h)</label><input type="number" id="precio_h" value="26.5" step="0.5"></div>
+                <div class="form-group" style="grid-column: 1 / -1;"><label>Límite Monofásico (kW)</label><input type="number" id="lim_mono" value="7.5" step="0.1"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">⚡ Receptores y Líneas</div>
+            <div class="table-container">
+                <table id="tabla_equipos">
+                    <thead>
+                        <tr>
+                            <th>Equipo</th>
+                            <th>P. Térmica(kW)</th>
+                            <th>Rendim.</th>
+                            <th>Long(m)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_equipos">
+                        <tr>
+                            <td><input type="text" value="Enfriadora"></td>
+                            <td><input type="number" class="v-pot" value="259.67"></td>
+                            <td><input type="number" class="v-cop" value="3.88" step="0.01"></td>
+                            <td><input type="number" class="v-long" value="10"></td>
+                            <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="anadirFila()">+ Añadir Equipo</button>
+        </div>
+        <button class="btn-calc" onclick="calcularElectricidad()">DIMENSIONAR LÍNEAS</button>
+        <div id="panel_resultados" style="display:none;">
+            <div class="results-grid">
+                <div class="res-box">
+                    <h3 style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 1rem;">🔋 Resumen Cuadro</h3>
+                    <div class="res-item"><span>Pot. Activa Total</span><strong id="r_pot_total">-- kW</strong></div>
+                    <div class="res-item"><span>Intensidad Máx</span><strong id="r_imax_total">-- A</strong></div>
+                    <div class="res-item" style="border-top: 1px solid var(--panel-border); padding-top: 0.8rem; margin-top: 0.5rem;">
+                        <span>Acometida Req.</span><strong id="r_acometida" style="color: var(--accent);">--</strong>
+                    </div>
+                </div>
+                <div class="res-box">
+                    <h3 style="color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase; margin-bottom: 1rem;">🛠️ Costes de Montaje</h3>
+                    <div class="res-item"><span>Manguera Total</span><strong id="r_long_total">-- m</strong></div>
+                    <div class="res-item"><span>Tiempo Aprox</span><strong id="r_horas_total">-- h</strong></div>
+                    <div class="res-item" style="border-top: 1px solid var(--panel-border); padding-top: 0.8rem; margin-top: 0.5rem;">
+                        <span>Costo Obra</span><strong id="r_coste_total" style="color: var(--success);">-- €</strong>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 1.5rem;">
+                <h4 style="color: white; margin-bottom: 1rem; font-size: 1rem;">📋 Desglose por Línea</h4>
+                <div id="res_desglose" style="display: flex; flex-direction: column; gap: 1rem;"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const magnetos = [10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630];
+        const diferenciales = [25, 40, 63, 80, 100, 125, 160, 200, 250, 315, 400, 500, 630];
+        const cableado = [
+            {sec: 1.5, imax: 23, hm: 0.019}, {sec: 2.5, imax: 31, hm: 0.021}, {sec: 4, imax: 40, hm: 0.026},
+            {sec: 6, imax: 52, hm: 0.031}, {sec: 10, imax: 71, hm: 0.039}, {sec: 16, imax: 96, hm: 0.048},
+            {sec: 25, imax: 127, hm: 0.06}, {sec: 35, imax: 157, hm: 0.075}, {sec: 50, imax: 190, hm: 0.09},
+            {sec: 70, imax: 242, hm: 0.11}, {sec: 95, imax: 293, hm: 0.13}, {sec: 120, imax: 344, hm: 0.15},
+            {sec: 150, imax: 395, hm: 0.17}, {sec: 185, imax: 451, hm: 0.20}, {sec: 240, imax: 530, hm: 0.25},
+            {sec: 300, imax: 615, hm: 0.30}, {sec: 400, imax: 730, hm: 0.38}, {sec: 500, imax: 840, hm: 0.45}
+        ];
+        function getMagneto(amp) { return magnetos.find(m => m >= amp) || magnetos[magnetos.length - 1]; }
+        function getDiferencial(mag) { return diferenciales.find(d => d >= mag) || diferenciales[diferenciales.length - 1]; }
+        function getSecPorAmp(amp) { let c = cableado.find(c => c.imax >= amp); return c ? c.sec : cableado[cableado.length - 1].sec; }
+        function getSecPorSec(sec) { let c = cableado.find(c => c.sec >= sec); return c ? c.sec : cableado[cableado.length - 1].sec; }
+        function getRend(sec) { let c = cableado.find(c => c.sec >= sec); return c ? c.hm : cableado[cableado.length - 1].hm; }
+        function calcularTierra(sec) {
+            if(sec <= 16) return sec;
+            if(sec <= 35) return 16;
+            return getSecPorSec(sec / 2);
+        }
+        function formatoManguera(sec, tierra, v) {
+            if(sec <= 10) return (v == 230 ? "5G " : "5G ") + sec + " mm²";
+            if(sec === tierra) return (v == 230 ? "5x(1x" : "5x(1x") + sec + ") mm²";
+            return (v == 230 ? "4x(1x" : "4x(1x") + sec + ") + 1x(1x" + tierra + ") TT mm²";
+        }
+        function anadirFila() {
+            const tbody = document.getElementById('tbody_equipos');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="Bomba"></td>
+                <td><input type="number" class="v-pot" value="10"></td>
+                <td><input type="number" class="v-cop" value="1.0" step="0.01"></td>
+                <td><input type="number" class="v-long" value="15"></td>
+                <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+        function borrarFila(btn) { if(document.getElementById('tbody_equipos').children.length > 1) btn.closest('tr').remove(); }
+        function calcularElectricidad() {
+            let cos_phi = parseFloat(document.getElementById('cos_phi').value);
+            let f_imax = parseFloat(document.getElementById('f_imax').value);
+            let m_mag = parseFloat(document.getElementById('m_mag').value);
+            let precio_h = parseFloat(document.getElementById('precio_h').value);
+            let lim_mono = parseFloat(document.getElementById('lim_mono').value);
+            
+            let tot_pot_elec = 0; let tot_imax = 0; let tot_long = 0; let tot_horas = 0;
+            const desgloseContainer = document.getElementById('res_desglose');
+            desgloseContainer.innerHTML = ''; 
+
+            document.querySelectorAll('#tbody_equipos tr').forEach(tr => {
+                let nombre = tr.querySelector('input[type="text"]').value;
+                let p_term = parseFloat(tr.querySelector('.v-pot').value) || 0;
+                let cop = parseFloat(tr.querySelector('.v-cop').value) || 1;
+                let long = parseFloat(tr.querySelector('.v-long').value) || 0;
+                
+                let p_elec = p_term / cop;
+                let volts = (p_elec <= lim_mono) ? 230 : 400;
+
+                let imax = (volts === 230) ? ((p_elec * 1000) / (230 * cos_phi)) * f_imax : ((p_elec * 1000) / (1.732 * 400 * cos_phi)) * f_imax;
+                let mag = getMagneto(imax * m_mag);
+                let dif_amp = getDiferencial(mag);
+                let sensibilidad = (volts === 400 || mag > 32) ? "300mA" : "30mA"; 
+                let dif = dif_amp + "A / " + sensibilidad;
+                
+                // Coordination correction: Use Magento amps to find section
+                let s_fase = getSecPorAmp(mag);
+                let s_tierra = calcularTierra(s_fase);
+                let manguera = formatoManguera(s_fase, s_tierra, volts);
+                // Coordination correction: Hilos is always 5 or 3 depending on phase
+                let mult_hilos = (volts === 230) ? 3 : 5;
+                let horas = long * getRend(s_fase) * mult_hilos;
+                
+                tot_pot_elec += p_elec; tot_imax += imax; tot_long += long; tot_horas += horas;
+                
+                desgloseContainer.innerHTML += `
+                    <div class="res-box">
+                        <div style="font-weight: 600; color: var(--accent); margin-bottom: 0.8rem; display: flex; justify-content: space-between;">
+                            <span>${nombre}</span>
+                            <span style="font-size: 0.8rem; background: #3A3A3C; color: white; padding: 2px 6px; border-radius: 4px;">${volts}V</span>
+                        </div>
+                        <div class="res-item"><span>Potencia:</span><strong>${p_elec.toFixed(2)} kW</strong></div>
+                        <div class="res-item"><span>I. Máx:</span><strong>${imax.toFixed(2)} A</strong></div>
+                        <div class="res-item"><span>Magneto:</span><strong style="color: var(--success);">${mag} A</strong></div>
+                        <div class="res-item"><span>Diferencial:</span><strong>${dif}</strong></div>
+                        <div class="term-badge" style="margin-top: 0.5rem;">${manguera}</div>
+                    </div>
+                `;
+            });
+            let aco_s_fase = getSecPorAmp(tot_imax * m_mag);
+            let aco_s_tierra = calcularTierra(aco_s_fase);
+            let aco_manguera = formatoManguera(aco_s_fase, aco_s_tierra, 400);
+
+            document.getElementById('r_pot_total').innerText = tot_pot_elec.toFixed(2) + " kW";
+            document.getElementById('r_imax_total').innerText = tot_imax.toFixed(2) + " A";
+            document.getElementById('r_acometida').innerText = aco_manguera;
+            document.getElementById('r_long_total').innerText = tot_long.toFixed(2) + " m";
+            document.getElementById('r_horas_total').innerText = tot_horas.toFixed(2) + " h";
+            document.getElementById('r_coste_total').innerText = (tot_horas * precio_h).toFixed(2) + " €";
+            
+            document.getElementById('panel_resultados').style.display = 'block';
+        }
+    </script>
+</body>
+</html>

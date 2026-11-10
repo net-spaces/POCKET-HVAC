@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Redes Climatización | Pocket HVAC</title>
+    <!-- PWA Configuración -->
+    <link rel="manifest" href="/POCKET-HVAC/manifest.json">
+    <meta name="theme-color" content="#000000">
+    <link rel="apple-touch-icon" href="/POCKET-HVAC/icons/icon-192.png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => { navigator.serviceWorker.register('/POCKET-HVAC/sw.js'); });
+        }
+    </script>
+    <style>
+        :root { --bg-base: #000000; --panel-bg: #1C1C1E; --panel-border: #38383A; --accent: #64D2FF; --text-main: #FFFFFF; --text-muted: #8E8E93; --danger: #FF453A; --cold: #64D2FF; --hot: #FF9F0A; --success: #32D74B;}
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        body { background-color: var(--bg-base); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding-bottom: 4rem; -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top);}
+        .app-nav { background: rgba(28, 28, 30, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: sticky; top: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; height: 54px; border-bottom: 0.5px solid var(--panel-border); margin-bottom: 1rem; }
+        .back-btn { position: absolute; left: 1rem; color: var(--accent); text-decoration: none; font-size: 1.1rem; display: flex; align-items: center; gap: 4px; }
+        .nav-title { font-weight: 600; font-size: 1.1rem; }
+        .container { max-width: 800px; margin: 0 auto; padding: 0 1rem; }
+        .card { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; margin-bottom: 1rem; }
+        .card-title { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px;}
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; font-size: 0.9rem; color: var(--text-main); margin-bottom: 0.4rem; }
+        input, select { width: 100%; background: #2C2C2E; border: none; color: white; padding: 0.8rem; border-radius: 10px; font-size: 1rem; font-family: inherit;}
+        input:focus, select:focus { outline: 2px solid var(--accent); }
+        .btn-calc { background: var(--accent); color: #000; border: none; padding: 1.2rem; width: 100%; border-radius: 14px; font-weight: 600; cursor: pointer; font-size: 1.1rem; margin: 1rem 0; }
+        .btn-calc:active { opacity: 0.8; }
+        .results-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-top: 1rem; }
+        .res-box { background: var(--panel-bg); border-radius: 14px; padding: 1.2rem; display: flex; flex-direction: column; gap: 0.5rem; text-align: center; }
+        .res-box span { color: var(--text-muted); font-size: 0.9rem; text-transform: uppercase;}
+        .res-box strong { font-weight: 600; font-size: 1.5rem;}
+        .btn-add { background: transparent; color: var(--accent); border: none; padding: 0.5rem 0; cursor: pointer; font-weight: 600; margin-top: 0.5rem; font-size: 1rem;}
+        .btn-del { background: #3A3A3C; color: var(--danger); border: none; padding: 0.4rem 0.6rem; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .table-container { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px;}
+        th { text-align: left; padding: 0.5rem; color: var(--text-muted); border-bottom: 1px solid var(--panel-border); font-weight: 500;}
+        td { padding: 0.5rem; border-bottom: 1px solid var(--panel-border); }
+        .c-cold { color: var(--cold); } .c-hot { color: var(--hot); } .c-main { color: var(--success); }
+    </style>
+</head>
+<body>
+    <div class="app-nav">
+        <a href="index.html" class="back-btn"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Atrás</a>
+        <div class="nav-title">Clima Pro</div>
+    </div>
+    <div class="container">
+        <div class="card" style="border: 1px solid var(--accent);">
+            <div class="form-group" style="margin:0;">
+                <label style="color: var(--accent); font-weight: 600;">Configuración del Sistema</label>
+                <select id="tipo_sistema" onchange="toggleSistema()">
+                    <option value="4">SISTEMA A 4 TUBOS (Doble Red)</option>
+                    <option value="2">SISTEMA A 2 TUBOS (Red Única)</option>
+                </select>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">⚙️ Parámetros Globales</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group"><label>Imp. Frío (°C)</label><input type="number" id="imp_frio" value="7"></div>
+                <div class="form-group"><label>Ret. Frío (°C)</label><input type="number" id="ret_frio" value="12"></div>
+                <div class="form-group"><label>Imp. Calor (°C)</label><input type="number" id="imp_calor" value="45"></div>
+                <div class="form-group"><label>Ret. Calor (°C)</label><input type="number" id="ret_calor" value="40"></div>
+                <div class="form-group"><label>Vel. Máx (m/s)</label><input type="number" id="v_max" value="1.5" step="0.1"></div>
+                <div class="form-group"><label>Simult. (%)</label><input type="number" id="simultaneidad" value="100"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-title">🏢 Zonas a Climatizar</div>
+            <div class="table-container">
+                <table id="tabla_zonas">
+                    <thead>
+                        <tr>
+                            <th>Zona</th>
+                            <th>Tipo Local</th>
+                            <th>Área(m²)</th>
+                            <th>R.Frío</th>
+                            <th>R.Calor</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbody_zonas">
+                        <tr>
+                            <td><input type="text" value="Zona 1" style="min-width: 90px;"></td>
+                            <td>
+                                <select onchange="actualizarRatios(this)" style="min-width: 140px;">
+                                    <option value="100,65">Oficinas</option>
+                                    <option value="120,80">Colegios</option>
+                                    <option value="150,90">Restaurante</option>
+                                    <option value="80,60">Residencial</option>
+                                    <option value="custom">Otro</option>
+                                </select>
+                            </td>
+                            <td><input type="number" class="val-area" value="120"></td>
+                            <td><input type="number" class="val-rfrio" value="100"></td>
+                            <td><input type="number" class="val-rcalor" value="65"></td>
+                            <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn-add" onclick="anadirFila()">+ Añadir Zona</button>
+        </div>
+        <button class="btn-calc" onclick="calcularRed()">CALCULAR RED</button>
+        <div id="panel_resultados" style="display:none;">
+            <div class="results-grid">
+                <div class="res-box">
+                    <span>Potencia Frío Total</span>
+                    <strong class="c-cold" id="res_p_frio">-- kW</strong>
+                </div>
+                <div class="res-box">
+                    <span>Potencia Calor Total</span>
+                    <strong class="c-hot" id="res_p_calor">-- kW</strong>
+                </div>
+                <div class="res-box">
+                    <span>Inercia Sistema</span>
+                    <strong style="color: #FF9F0A;" id="res_inercia">-- L</strong>
+                </div>
+            </div>
+            <div class="results-grid" id="res_4tubos">
+                <div class="res-box" style="border: 1px solid rgba(100,210,255,0.3);"><span>Caudal Frío</span><strong class="c-cold" id="res_q_frio">-- l/s</strong></div>
+                <div class="res-box" style="border: 1px solid rgba(100,210,255,0.3);"><span>Ø Colector Frío</span><strong class="c-cold" id="res_d_frio">-- mm</strong></div>
+                <div class="res-box" style="border: 1px solid rgba(255,159,10,0.3);"><span>Caudal Calor</span><strong class="c-hot" id="res_q_calor">-- l/s</strong></div>
+                <div class="res-box" style="border: 1px solid rgba(255,159,10,0.3);"><span>Ø Colector Calor</span><strong class="c-hot" id="res_d_calor">-- mm</strong></div>
+            </div>
+            <div class="results-grid" id="res_2tubos" style="display: none;">
+                <div class="res-box" style="border: 1px solid rgba(50,215,75,0.3);"><span>Caudal Desfavorable</span><strong class="c-main" id="res_q_max">-- l/s</strong></div>
+                <div class="res-box" style="border: 1px solid rgba(50,215,75,0.3);"><span>Ø Colector Único</span><strong class="c-main" id="res_d_unico">-- mm</strong></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        function toggleSistema() { document.getElementById('panel_resultados').style.display = 'none'; }
+        function actualizarRatios(selectElement) {
+            const row = selectElement.closest('tr');
+            const valor = selectElement.value;
+            if (valor !== 'custom') {
+                const ratios = valor.split(',');
+                row.querySelector('.val-rfrio').value = ratios[0];
+                row.querySelector('.val-rcalor').value = ratios[1];
+            }
+        }
+        function anadirFila() {
+            const tbody = document.getElementById('tbody_zonas');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="Zona ${tbody.children.length + 1}" style="min-width: 90px;"></td>
+                <td>
+                    <select onchange="actualizarRatios(this)" style="min-width: 140px;">
+                        <option value="100,65" selected>Oficinas</option>
+                        <option value="120,80">Colegios</option>
+                        <option value="150,90">Restaurante</option>
+                        <option value="80,60">Residencial</option>
+                        <option value="custom">Otro</option>
+                    </select>
+                </td>
+                <td><input type="number" class="val-area" value="0"></td>
+                <td><input type="number" class="val-rfrio" value="100"></td>
+                <td><input type="number" class="val-rcalor" value="65"></td>
+                <td><button class="btn-del" onclick="borrarFila(this)">X</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+        function borrarFila(btn) { if (document.getElementById('tbody_zonas').children.length > 1) btn.closest('tr').remove(); }
+        function calcularRed() {
+            const sysType = document.getElementById('tipo_sistema').value;
+            const dtFrio = parseFloat(document.getElementById('ret_frio').value) - parseFloat(document.getElementById('imp_frio').value);
+            const dtCalor = parseFloat(document.getElementById('imp_calor').value) - parseFloat(document.getElementById('ret_calor').value);
+            const vMax = parseFloat(document.getElementById('v_max').value);
+            const sim = parseFloat(document.getElementById('simultaneidad').value) / 100;
+
+            let p_frio_total_W = 0; let p_calor_total_W = 0;
+            const areas = document.getElementsByClassName('val-area');
+            const rfrios = document.getElementsByClassName('val-rfrio');
+            const rcalores = document.getElementsByClassName('val-rcalor');
+
+            for(let i=0; i<areas.length; i++) {
+                let a = parseFloat(areas[i].value) || 0;
+                p_frio_total_W += a * (parseFloat(rfrios[i].value) || 0);
+                p_calor_total_W += a * (parseFloat(rcalores[i].value) || 0);
+            }
+            const p_frio_kW = (p_frio_total_W / 1000) * sim;
+            const p_calor_kW = (p_calor_total_W / 1000) * sim;
+            const q_frio_ls = (p_frio_kW / (1.16 * dtFrio)) * (1000/3600);
+            const q_calor_ls = (p_calor_kW / (1.16 * dtCalor)) * (1000/3600);
+            const d_frio = Math.sqrt((4 * (q_frio_ls/1000)) / (Math.PI * vMax)) * 1000;
+            const d_calor = Math.sqrt((4 * (q_calor_ls/1000)) / (Math.PI * vMax)) * 1000;
+            const inercia = Math.round(Math.max(p_frio_kW, p_calor_kW) * 15);
+
+            document.getElementById('res_p_frio').innerText = p_frio_kW.toFixed(1) + " kW";
+            document.getElementById('res_p_calor').innerText = p_calor_kW.toFixed(1) + " kW";
+            document.getElementById('res_inercia').innerText = inercia + " L";
+
+            if (sysType === "4") {
+                document.getElementById('res_4tubos').style.display = 'grid';
+                document.getElementById('res_2tubos').style.display = 'none';
+                document.getElementById('res_q_frio').innerText = q_frio_ls.toFixed(2) + " l/s";
+                document.getElementById('res_d_frio').innerText = "Ø " + Math.ceil(d_frio) + " mm";
+                document.getElementById('res_q_calor').innerText = q_calor_ls.toFixed(2) + " l/s";
+                document.getElementById('res_d_calor').innerText = "Ø " + Math.ceil(d_calor) + " mm";
+            } else {
+                document.getElementById('res_4tubos').style.display = 'none';
+                document.getElementById('res_2tubos').style.display = 'grid';
+                const q_max_ls = Math.max(q_frio_ls, q_calor_ls);
+                const d_unico = Math.max(d_frio, d_calor);
+                document.getElementById('res_q_max').innerText = q_max_ls.toFixed(2) + " l/s";
+                document.getElementById('res_d_unico').innerText = "Ø " + Math.ceil(d_unico) + " mm";
+            }
+            document.getElementById('panel_resultados').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
